@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ title or "DataForSEO Research Toolkit" }}</title>
+<link rel="stylesheet" href="{{ url_for('static', path='/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='/backlink.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='/serp.css') }}">
+</head>
+<body>
+  <header><a class="brand" href="/">DataForSEO Research Toolkit</a><nav>Fundament · Runs · Kosten</nav></header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

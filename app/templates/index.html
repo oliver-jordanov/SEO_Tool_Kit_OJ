@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div><span class="eyebrow">Phase 1 · lokales Fundament</span><h1>Cache-first. Kosten nachvollziehbar.</h1><p>Der Keyword-Overview-Smoke-Test prüft den vollständigen persistenten Ablauf.</p></div>
+  <div class="metric"><span>Bestätigte Kosten</span><strong>${{ "%.6f"|format(total_cost) }}</strong></div>
+</section>
+{% if not credentials %}<div class="notice warning">API-Zugangsdaten fehlen in <code>.env</code>.</div>{% endif %}
+{% if error %}<div class="notice error">{{ error }}</div>{% endif %}
+{% if result %}<div class="notice success">Run {{ result.run_id }} abgeschlossen · {% if result.cache_hit %}Cache-Hit, keine API-Kosten{% else %}API, ${{ result.cost_usd }}{% endif %} · <a href="/runs/{{ result.run_id }}">Details öffnen</a></div>{% endif %}
+{% if serp_result %}<div class="notice success">SERP Run {{ serp_result.run_id }} abgeschlossen · API, ${{ serp_result.cost_usd }} · <a href="/runs/{{ serp_result.run_id }}">Ergebnisse öffnen</a></div>{% endif %}
+{% if backlink_result %}<div class="notice {% if backlink_result.status == 'completed' %}success{% else %}warning{% endif %}">Backlink Run {{ backlink_result.run_id }} · {{ backlink_result.status }} · ${{ backlink_result.cost_usd }} · <a href="/runs/{{ backlink_result.run_id }}">Ergebnisse öffnen</a></div>{% endif %}
+{% if keyword_item %}
+<section class="card result-card">
+  <div class="section-head"><div><span class="eyebrow">Keyword Overview</span><h2>{{ keyword_item.keyword }}</h2></div><span class="pill">{{ keyword_item.search_intent_info.main_intent if keyword_item.search_intent_info else "–" }}</span></div>
+  <div class="result-grid">
+    <div><span>Suchvolumen</span><strong>{{ keyword_item.keyword_info.search_volume if keyword_item.keyword_info and keyword_item.keyword_info.search_volume is not none else "–" }}</strong></div>
+    <div><span>CPC</span><strong>{% if keyword_item.keyword_info and keyword_item.keyword_info.cpc is not none %}${{ "%.2f"|format(keyword_item.keyword_info.cpc) }}{% else %}–{% endif %}</strong></div>
+    <div><span>Competition</span><strong>{{ keyword_item.keyword_info.competition_level if keyword_item.keyword_info else "–" }}</strong></div>
+    <div><span>Difficulty</span><strong>{{ keyword_difficulty if keyword_difficulty is not none else "–" }}</strong></div>
+  </div>
+</section>
+{% endif %}
+<section class="card serp-form">
+  <div class="section-head"><div><span class="eyebrow">Dritter vertikaler Slice</span><h2>Backlink Explorer v1</h2></div><span class="pill">3 Live-Endpunkte</span></div>
+  <form method="post" action="/backlink-explorer" onsubmit="this.querySelector('button').disabled=true">
+    <div class="form-grid">
+      <label class="wide">Domain, Subdomain oder vollständige URL<input name="target" required placeholder="jodano.de oder https://jodano.de/seite/"></label>
+      <label>Ergebnislimit<select name="limit"><option>25</option><option>50</option><option selected>100</option></select></label>
+      <label>Gruppierung<select name="mode"><option value="one_per_domain" selected>Ein Backlink je Domain</option><option value="as_is">Alle Backlinks</option></select></label>
+      <label class="check"><input type="checkbox" name="include_subdomains" value="true" checked> Subdomains einbeziehen</label>
+    </div>
+    <div class="notice warning"><strong>Kostenpflichtige Analyse:</strong> Das Absenden löst bis zu drei separate Live-API-Aufrufe aus. Kein Retry, kein automatisches Nachladen.</div>
+    <label class="check"><input type="checkbox" name="confirm_cost" value="true" required> Ich bestätige bis zu drei kostenpflichtige DataForSEO-Abrufe.</label>
+    <button type="submit">Backlinks analysieren</button>
+  </form>
+</section>
+<section class="card serp-form">
+  <div class="section-head"><div><span class="eyebrow">Zweiter vertikaler Slice</span><h2>SERP Explorer v1</h2></div><span class="pill">Google Organic · Live Advanced</span></div>
+  <form method="post" action="/serp-explorer">
+    <div class="form-grid">
+      <label class="wide">Keyword<input type="text" name="keyword" required placeholder="z. B. kredit für arbeitslose"></label>
+      <label>Location-Code<input type="number" name="location_code" value="2276" min="1" required></label>
+      <label>Sprache<input type="text" name="language_code" value="de" required></label>
+      <label>Gerät<select name="device"><option value="desktop">Desktop</option><option value="mobile">Mobile</option></select></label>
+      <label>Ergebnistiefe<select name="depth"><option value="10">Top 10</option><option value="100">Top 100</option></select></label>
+      <label class="wide">Eigene Domain (optional)<input type="text" name="own_domain" placeholder="example.com"></label>
+    </div>
+    <div class="notice warning"><strong>Kostenpflichtiger Live-Abruf:</strong> Top 10 ca. $0,002, Top 100 ca. $0,020. Maßgeblich ist die zurückgemeldete Ist-Kostenangabe. Der Request wird nicht automatisch wiederholt.</div>
+    <label class="check"><input type="checkbox" name="confirm_cost" value="true" required> Ich bestätige diesen kostenpflichtigen DataForSEO-Abruf.</label>
+    <button type="submit">SERP jetzt abrufen</button>
+  </form>
+</section>
+<section class="grid">
+  <article class="card">
+    <h2>Fundament-Smoke-Test</h2>
+    <form method="post" action="/foundation/keyword-overview">
+      <label>Keyword<input name="keyword" value="kredit für arbeitslose" required></label>
+      <label class="check"><input type="checkbox" name="confirm_cost" value="true"> Kostenpflichtigen Abruf bestätigen (ca. $0,01212)</label>
+      <label class="check"><input type="checkbox" name="force_refresh" value="true"> Cache bewusst umgehen</label>
+      <button type="submit">Abruf starten</button>
+    </form>
+  </article>
+  <article class="card">
+    <h2>Letzte Runs</h2>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Funktion</th><th>Quelle</th><th>Status</th></tr></thead><tbody>
+    {% for run in runs %}<tr><td><a href="/runs/{{ run.id }}">{{ run.id }}</a></td><td>{{ run.function }}</td><td><span class="pill">{{ run.source }}</span></td><td>{{ run.status }}</td></tr>{% else %}<tr><td colspan="4">Noch keine Runs gespeichert.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </article>
+</section>
+{% endblock %}

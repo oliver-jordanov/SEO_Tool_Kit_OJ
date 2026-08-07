@@ -1,0 +1,6 @@
+.lost-link { background: #351c22; }
+.pill.lost { border-color: var(--bad); color: var(--bad); }
+.pill.follow { border-color: var(--ok); color: var(--ok); }
+.pill.nofollow { color: var(--muted); }
+td { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+button:disabled { opacity: .55; cursor: wait; }
